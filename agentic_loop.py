@@ -6,37 +6,81 @@ import requests
 from dotenv import load_dotenv
 from openai import OpenAI
 
-ENV_PATH = Path(__file__).with_name(".env")
+
+# ------------------------------------------------------------
+# PATHS AND ENVIRONMENT
+# ------------------------------------------------------------
+
+BASE_DIR = Path(__file__).resolve().parent
+ENV_PATH = BASE_DIR / ".env"
+DATABASE_NAME = BASE_DIR / "enrolment.db"
+PROMPT_DIR = BASE_DIR / "prompts"
+
 load_dotenv(dotenv_path=ENV_PATH)
 
+
+# ------------------------------------------------------------
+# AGENTIC LOOP PLAN
+# ------------------------------------------------------------
+
 PLAN = {
-    "goal": "Validate Student Enrolment App behavior using a local multi-agent workflow",
+    "goal": (
+        "Validate Student Enrolment App behaviour using "
+        "a local multi-agent workflow"
+    ),
     "checks": [
         "/students",
         "/students/{student_id}",
         "/students/by-id",
         "/students/by-subject",
-        "/ask"
-    ]
-} #
+    ],
+}
 
-DATABASE_NAME = Path(__file__).with_name("enrolment.db")
+
+# ------------------------------------------------------------
+# OLLAMA CONFIGURATION
+# ------------------------------------------------------------
 
 OLLAMA_BASE_URL = os.getenv(
     "OLLAMA_BASE_URL",
-    "http://localhost:11434/v1"
+    "http://localhost:11434/v1",
 )
 
 IMPLEMENTATION_MODEL = os.getenv(
     "OLLAMA_MODEL",
-    "qwen2.5:0.5b"
+    "qwen2.5:0.5b",
 )
 
 REVIEW_MODEL = os.getenv(
     "OLLAMA_REVIEW_MODEL",
-    "llama3.1:8b"
+    "llama3.1:8b",
 )
 
+
+# ------------------------------------------------------------
+# PROMPT ASSET LOADER
+# ------------------------------------------------------------
+
+def load_prompt(filename):
+    """
+    Load a prompt asset from the prompts directory.
+    """
+
+    prompt_path = PROMPT_DIR / filename
+
+    if not prompt_path.exists():
+        raise FileNotFoundError(
+            f"Prompt file not found: {prompt_path}"
+        )
+
+    return prompt_path.read_text(
+        encoding="utf-8"
+    ).strip()
+
+
+# ------------------------------------------------------------
+# DATABASE VALIDATION
+# ------------------------------------------------------------
 
 def validate_student(student):
     student_id, student_name, subject_code = student
@@ -70,13 +114,16 @@ def observe_data_quality():
     conn.close()
 
     if len(students) != 10:
-        return False, "Expected 10 students"
+        return (
+            False,
+            f"Expected 10 students but found {len(students)}",
+        )
 
     for student in students:
-        ok, msg = validate_student(student)
+        ok, message = validate_student(student)
 
         if not ok:
-            return False, msg
+            return False, message
 
     return True, "Data validation passed"
 
@@ -94,26 +141,33 @@ def observe_subject_search(subject_code):
         FROM students
         WHERE subject_code = ?
         """,
-        (subject_code,)
+        (subject_code,),
     ).fetchall()
 
     conn.close()
 
     if not students:
-        return False, (
-            f"No students found for subject code {subject_code}"
+        return (
+            False,
+            f"No students found for subject code {subject_code}",
         )
 
     for student in students:
         if student[2] != subject_code:
-            return False, (
-                f"Unexpected subject code found: {student[2]}"
+            return (
+                False,
+                f"Unexpected subject code found: {student[2]}",
             )
 
-    return True, (
-        f"Subject search validation passed for {subject_code}"
+    return (
+        True,
+        f"Subject search validation passed for {subject_code}",
     )
 
+
+# ------------------------------------------------------------
+# LIVE ENDPOINT VALIDATION
+# ------------------------------------------------------------
 
 def observe_live_endpoints():
     results = []
@@ -121,37 +175,56 @@ def observe_live_endpoints():
     try:
         response = requests.get(
             "http://127.0.0.1:5000/students",
-            timeout=5
+            timeout=5,
         )
-        results.append(f"/students -> HTTP {response.status_code}")
+
+        results.append(
+            f"/students -> HTTP {response.status_code}"
+        )
+
     except Exception as exc:
-        results.append(f"/students -> error: {exc}")
+        results.append(
+            f"/students -> error: {exc}"
+        )
 
     try:
         response = requests.get(
-            "http://127.0.0.1:5000/students/by-subject?subject_code=ASD101",
-            timeout=5
+            (
+                "http://127.0.0.1:5000/"
+                "students/by-subject"
+                "?subject_code=ASD101"
+            ),
+            timeout=5,
         )
+
         results.append(
-            f"/students/by-subject -> HTTP {response.status_code}"
+            "/students/by-subject -> "
+            f"HTTP {response.status_code}"
         )
+
     except Exception as exc:
-        results.append(f"/students/by-subject -> error: {exc}")
+        results.append(
+            f"/students/by-subject -> error: {exc}"
+        )
 
     return results
 
+
+# ------------------------------------------------------------
+# LOCAL MODEL CALL
+# ------------------------------------------------------------
 
 def call_model(
     model_name,
     system_prompt,
     user_prompt,
-    max_tokens=120
+    max_tokens=120,
 ):
     try:
         client = OpenAI(
             base_url=OLLAMA_BASE_URL,
             api_key="ollama",
-            timeout=180.0
+            timeout=180.0,
         )
 
         response = client.chat.completions.create(
@@ -159,15 +232,15 @@ def call_model(
             messages=[
                 {
                     "role": "system",
-                    "content": system_prompt
+                    "content": system_prompt,
                 },
                 {
                     "role": "user",
-                    "content": user_prompt
-                }
+                    "content": user_prompt,
+                },
             ],
             max_tokens=max_tokens,
-            temperature=0.1
+            temperature=0.1,
         )
 
         content = response.choices[0].message.content
@@ -178,141 +251,93 @@ def call_model(
         return "No response generated.", None
 
     except Exception as exc:
-        return None, (
-            f"{model_name} unavailable or timed out ({exc})"
+        return (
+            None,
+            f"{model_name} unavailable or timed out ({exc})",
         )
 
 
+# ------------------------------------------------------------
+# IMPLEMENTATION AGENT
+# ------------------------------------------------------------
+
 def get_implementation_agent_advice(observe_message):
-    prompt = (
-        "You are the IMPLEMENTATION AGENT for a Flask "
-        "Student Enrolment App.\n\n"
+    try:
+        system_prompt = load_prompt(
+            "implementation_system_prompt.txt"
+        )
 
-        "Current database fields:\n"
-        "- student_id\n"
-        "- student_name\n"
-        "- subject_code\n\n"
+        task_prompt = load_prompt(
+            "implementation_task_prompt.txt"
+        )
 
-        "Important domain rule:\n"
-        "- subject_code is NOT unique.\n"
-        "- Multiple students may enrol in the same subject.\n"
-        "- Non-unique subject_code values are expected and valid behaviour.\n"
-        "- Multiple students sharing the same subject_code MUST NOT be reported as a risk.\n"
-        "- Do not recommend uniqueness, deduplication, or duplicate handling for subject_code.\n"
-        "- Any recommendation to make subject_code unique is invalid.\n\n"
+        # Runtime Prompt Assembly:
+        # Replace the placeholder with real validation evidence.
+        task_prompt = task_prompt.replace(
+            "{{VALIDATION_EVIDENCE}}",
+            observe_message,
+        )
 
-        "Current endpoints:\n"
-        "- GET /students\n"
-        "- GET /students/<student_id>\n"
-        "- GET /students/by-id\n"
-        "- GET /students/by-subject\n"
-        "- POST /ask\n\n"
+        return call_model(
+            IMPLEMENTATION_MODEL,
+            system_prompt,
+            task_prompt,
+            max_tokens=120,
+        )
 
-        f"Validation Evidence:\n{observe_message}\n\n"
+    except Exception as exc:
+        return (
+            None,
+            f"Implementation prompt loading failed ({exc})",
+        )
 
-        "Task:\n"
-        "Review ONLY the existing subject-code search feature.\n\n"
 
-        "Check whether the Flask app is running. If it is running, make real "
-        "HTTP requests to the relevant endpoints such as /students, "
-        "/students/by-id, and /students/by-subject and inspect the actual "
-        "responses. Also check the local database. Use that live endpoint "
-        "evidence from the running app. Do not rely only on database checks "
-        "or code reading. If the app is not responding, say: Unable to "
-        "verify live endpoint behavior.\n\n"
-
-        "Rules:\n"
-        "- Do not invent new database fields.\n"
-        "- Do not invent new endpoints.\n"
-        "- Do not modify endpoint contracts.\n"
-        "- Do not suggest new application features.\n"
-        "- Do not recommend subject_code uniqueness.\n"
-        "- Focus only on validation, error handling, "
-        "response formatting, or testing.\n"
-        "- If the evidence does not support an improvement, "
-        "write: No evidence-backed improvement identified.\n"
-        "- Return exactly two bullet points, or the no-evidence sentence.\n"
-    )
-
-    return call_model(
-        IMPLEMENTATION_MODEL,
-        (
-            "You are a concise implementation assistant. "
-            "Follow the rules exactly. "
-            "Do not invent requirements."
-        ),
-        prompt,
-        max_tokens=120
-    )
-
+# ------------------------------------------------------------
+# REVIEW AGENT
+# ------------------------------------------------------------
 
 def get_review_agent_advice(
     implementation_message,
-    observe_message
+    observe_message,
 ):
-    prompt = (
-        "Review ONLY the implementation-agent "
-        "recommendation.\n\n"
+    try:
+        system_prompt = load_prompt(
+            "review_system_prompt.txt"
+        )
 
-        f"Implementation Recommendation:\n"
-        f"{implementation_message}\n\n"
+        task_prompt = load_prompt(
+            "review_task_prompt.txt"
+        )
 
-        f"Validation Evidence:\n"
-        f"{observe_message}\n\n"
+        # Insert the Implementation Agent recommendation.
+        task_prompt = task_prompt.replace(
+            "{{IMPLEMENTATION_RECOMMENDATION}}",
+            implementation_message,
+        )
 
-        "Before reviewing the recommendation, use the validation evidence "
-        "provided. Review only the implementation-agent recommendation and "
-        "identify evidence-backed risks or corrections. If no evidence-backed "
-        "risk exists, say so.\n\n"
+        # Insert the original validation evidence.
+        task_prompt = task_prompt.replace(
+            "{{VALIDATION_EVIDENCE}}",
+            observe_message,
+        )
 
-        "Application Scope:\n"
-        "- database fields: student_id, "
-        "student_name, subject_code\n"
-        "- endpoints: /students, "
-        "/students/<student_id>, "
-        "/students/by-id, "
-        "/students/by-subject, "
-        "/ask\n\n"
+        return call_model(
+            REVIEW_MODEL,
+            system_prompt,
+            task_prompt,
+            max_tokens=120,
+        )
 
-        "Important domain rule:\n"
-        "- subject_code is NOT unique.\n"
-        "- Multiple students may enrol in the same subject.\n"
-        "- Any recommendation to make subject_code unique is invalid.\n\n"
+    except Exception as exc:
+        return (
+            None,
+            f"Review prompt loading failed ({exc})",
+        )
 
-        "Rules:\n"
-        "- Do not invent new database fields.\n"
-        "- Do not invent new endpoints.\n"
-        "- Do not suggest new features.\n"
-        "- Identify only evidence-backed risks "
-        "or corrections.\n"
-        "- If no evidence-backed risk exists, say so.\n"
-        "- Return exactly three lines.\n\n"
 
-        "Format:\n"
-        "Risk: <one short sentence>\n"
-        "Correction: <one short sentence>\n"
-        "Retest: <one short sentence>\n\n"
-
-        "If no risk is supported by the evidence, use:\n"
-        "Risk: No evidence-backed risk identified.\n"
-        "Correction: No correction required.\n"
-        "Retest: Repeat validation after future changes.\n\n"
-
-        "- Maximum 35 words total.\n"
-        "- Do not explain reasoning.\n"
-    )
-
-    return call_model(
-        REVIEW_MODEL,
-        (
-            "You are a concise software review assistant. "
-            "Follow the output format exactly. "
-            "Do not invent requirements."
-        ),
-        prompt,
-        max_tokens=100
-    )
-
+# ------------------------------------------------------------
+# HUMAN REVIEW
+# ------------------------------------------------------------
 
 def human_review():
     print()
@@ -337,25 +362,30 @@ def adapt(decision):
 
     if decision == "Accept":
         print(
-            "ADAPT: Apply recommendation and rerun validation."
+            "ADAPT: Accept the recommendation and "
+            "record the supporting evidence."
         )
 
     elif decision == "Partially Accept":
         print(
-            "ADAPT: Apply selected recommendations and "
-            "rerun validation."
+            "ADAPT: Refine the relevant prompt asset, "
+            "rerun validation, and compare the results."
         )
 
     else:
         print(
-            "ADAPT: Keep current implementation and "
-            "document rationale."
+            "ADAPT: Reject the recommendation, document "
+            "the rationale, and refine the prompt if required."
         )
 
 
+# ------------------------------------------------------------
+# MAIN AGENTIC LOOP
+# ------------------------------------------------------------
+
 def main():
     print("=" * 60)
-    print("ASD LAB 02 AGENTIC LOOP")
+    print("ASD LAB 03 AGENTIC LOOP")
     print("=" * 60)
 
     print()
@@ -364,28 +394,42 @@ def main():
 
     print()
     print("ACT")
-    print("Check local database records")
+    print("Check local database records and live endpoints")
 
-    ok_data, msg_data = observe_data_quality()
+    # Database validation
+    ok_data, message_data = observe_data_quality()
 
     print()
-    print("OBSERVE")
-    print(msg_data)
+    print("OBSERVE: Database Check")
+    print(message_data)
 
-    ok_subject, msg_subject = observe_subject_search(
+    # Subject-code search validation
+    ok_subject, message_subject = observe_subject_search(
         "ASD101"
     )
 
-    print(msg_subject)
+    print()
+    print("OBSERVE: Subject Search Check")
+    print(message_subject)
 
+    # Live endpoint validation
     live_results = observe_live_endpoints()
 
+    print()
+    print("OBSERVE: Live Endpoint Check")
+
+    for result in live_results:
+        print(result)
+
+    # Assemble objective validation evidence.
     observe_message = (
-        f"{msg_data}. "
-        f"{msg_subject}. "
-        f"Live endpoint checks: " + "; ".join(live_results)
+        f"Database Check: {message_data}\n"
+        f"Subject Search Check: {message_subject}\n"
+        f"Live Endpoint Checks:\n"
+        + "\n".join(live_results)
     )
 
+    # Implementation Agent
     print()
     print("IMPLEMENTATION AGENT")
     print(f"Model: {IMPLEMENTATION_MODEL}")
@@ -399,13 +443,18 @@ def main():
     if implementation_advice:
         print()
         print(implementation_advice)
+
     else:
         print()
         print(implementation_error)
+
         implementation_advice = (
-            "Implementation agent unavailable."
+            "Implementation Agent was unavailable. "
+            "No valid implementation recommendation "
+            "was generated."
         )
 
+    # Review Agent
     print()
     print("REVIEW AGENT")
     print(f"Model: {REVIEW_MODEL}")
@@ -413,24 +462,32 @@ def main():
     review_advice, review_error = (
         get_review_agent_advice(
             implementation_advice,
-            observe_message
+            observe_message,
         )
     )
 
     if review_advice:
         print()
         print(review_advice)
+
     else:
         print()
         print(review_error)
+
+    # Human approval
     print()
     print("HUMAN DECISION")
+
     decision = human_review()
+
     print()
     print(f"Decision: {decision}")
+
     adapt(decision)
+
     print()
     print("LOOP COMPLETE")
+
 
 if __name__ == "__main__":
     main()

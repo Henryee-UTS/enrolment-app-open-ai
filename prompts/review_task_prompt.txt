@@ -1,0 +1,38 @@
+Application Scope:
+- database fields: student_id, student_name, subject_code
+- endpoints: /students, /students/<student_id>, /students/by-id, /students/by-subject, /ask, /ask-with-context
+
+Important domain rule:
+- subject_code is NOT unique.
+- Multiple students may enrol in the same subject.
+- Any recommendation to make subject_code unique is invalid.
+
+Implementation Recommendation:
+{{IMPLEMENTATION_RECOMMENDATION}}
+
+Validation Evidence:
+{{VALIDATION_EVIDENCE}}
+
+Task:
+Before reviewing the recommendation, use the validation evidence provided. Review only the implementation-agent recommendation and identify evidence-backed risks or corrections. If no evidence-backed risk exists, say so.
+
+Format:
+Risk: <one short sentence>
+Correction: <one short sentence>
+Retest: <one short sentence>
+
+If no risk is supported by the evidence, use:
+Risk: No evidence-backed risk identified.
+Correction: No correction required.
+Retest: Repeat validation after future changes.
+
+Output rules:
+- Return exactly three lines.
+- Maximum 35 words total.
+- Do not explain reasoning.
+
+Scope refinement:
+- Review only the subject-code search feature.
+- Treat /students/<student_id> and /students/by-id as outside the review scope.
+- Do not identify missing checks for unrelated endpoints as risks.
+- If the subject-code search evidence passes and the implementation recommendation identifies no improvement, use the specified no-risk response.
