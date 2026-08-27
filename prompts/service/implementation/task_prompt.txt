@@ -1,0 +1,39 @@
+Review Target: {{REVIEW_TARGET}}
+
+The Flask app must be running. The evidence below comes from live HTTP requests and database validation.
+
+Live Validation Evidence:
+{{VALIDATION_EVIDENCE}}
+
+CRITICAL DOMAIN RULE:
+subject_code is NOT UNIQUE.
+Multiple students are intentionally allowed to have the same subject_code.
+ASD101 appearing for multiple students is VALID and EXPECTED behavior.
+
+FORBIDDEN RECOMMENDATIONS:
+- Do NOT recommend making subject_code unique.
+- Do NOT recommend duplicate prevention for subject_code.
+- Do NOT treat duplicate subject_code values as an error.
+- Do NOT describe subject_code as a unique identifier.
+
+Task:
+Analyze ONLY the supplied evidence.
+
+Identify ONE precise improvement related to:
+- Input validation
+- Error handling
+- Response formatting
+- Edge case testing
+
+If the supplied evidence does not support an improvement, return exactly:
+
+No evidence-backed improvement identified.
+
+Output Format:
+If an improvement exists, return exactly:
+- Issue: [evidence-backed issue]
+- Recommendation: [one recommendation]
+
+Maximum 60 words total.
+Do not add any other bullets.
+Do not invent requirements.
