@@ -11,7 +11,7 @@ def print_menu() -> None:
     print("1 - DB")
     print("2 - Endpoints")
     print("3 - Architecture")
-    print("4 - Run All")
+    print("4 - DevOps")
     print("0 - Exit")
     print("=" * 70)
 

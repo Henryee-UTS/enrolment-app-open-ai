@@ -43,6 +43,17 @@ def build_mode_config() -> dict[str, ModeConfig]:
             ),
             review_prompts=("review/agent_review_prompt.txt",),
         ),
+        "devops": ModeConfig(
+            key="devops",
+            label="DevOps",
+            prompt_family="lab5",
+            implementation_prompts=(
+                "implementation/devops_pipeline_review_prompt.txt",
+            ),
+            review_prompts=(
+                "review/devops_evidence_review_prompt.txt",
+            ),
+        ),
     }
 
 
