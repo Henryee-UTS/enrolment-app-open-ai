@@ -54,6 +54,17 @@ def build_mode_config() -> dict[str, ModeConfig]:
                 "review/devops_evidence_review_prompt.txt",
             ),
         ),
+        "mcp": ModeConfig(
+            key="mcp",
+            label="MCP",
+            prompt_family="lab7",
+            implementation_prompts=(
+                "implementation/tool_selection_prompt.txt",
+            ),
+            review_prompts=(
+                "review/integration_review_prompt.txt",
+            ),
+        ),
     }
 
 
