@@ -5,3 +5,4 @@ venv
 vscode
 __pycache__/
 *.db.env
+.venv-lab7/
