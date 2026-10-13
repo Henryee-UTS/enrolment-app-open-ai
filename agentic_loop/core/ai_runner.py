@@ -15,7 +15,11 @@ class AIRunner:
         self.base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434/v1")
         self.implementation_model = os.getenv("OLLAMA_MODEL", "qwen2.5:0.5b")
         self.review_model = os.getenv("OLLAMA_REVIEW_MODEL", "llama3.1:8b")
-        self.client = OpenAI(base_url=self.base_url, api_key="ollama", timeout=600.0)
+        self.client = OpenAI(
+            base_url=self.base_url, api_key="ollama",
+            timeout=float(os.getenv("OLLAMA_TIMEOUT_SECONDS", "600")),
+            max_retries=0,
+        )
 
     def call(self, system_prompt: str, user_prompt: str, *, review: bool = False, max_tokens: int = 180) -> tuple[str | None, str | None]:
         model_name = self.review_model if review else self.implementation_model

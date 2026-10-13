@@ -1,3 +1,5 @@
+import sys
+
 from mcp.server import MCPServer
 
 from tools import (
@@ -39,12 +41,12 @@ def ci_report(report_path: str = "../reports/report.json"):
 
 
 if __name__ == "__main__":
-    print("Starting Student Enrolment MCP Server...")
-    print("Server status: RUNNING")
-    print("Interact with MCP tools from a second terminal.")
-    print("Available tools:")
+    print("Starting Student Enrolment MCP Server...", file=sys.stderr)
+    print("Server status: RUNNING", file=sys.stderr)
+    print("Interact with MCP tools from a second terminal.", file=sys.stderr)
+    print("Available tools:", file=sys.stderr)
 
     for tool in AVAILABLE_TOOLS:
-        print(f"- {tool}")
+        print(f"- {tool}", file=sys.stderr)
 
     mcp.run()

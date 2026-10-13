@@ -1,0 +1,157 @@
+[
+  {
+    "check": "frontend RAG page",
+    "http_status": 200,
+    "payload": {
+      "html_served": true
+    }
+  },
+  {
+    "check": "RAG health",
+    "http_status": 200,
+    "payload": {
+      "status": "ok",
+      "service": "rag-server"
+    }
+  },
+  {
+    "check": "refresh via Docker",
+    "http_status": 200,
+    "payload": {
+      "caller": "student",
+      "chunk_count": 20,
+      "collection": "student_enrolment_enterprise_context",
+      "corpus_path": "/Users/ashley/Desktop/enrolment-app-open-ai-1/rag-server/corpus/corpus.jsonl",
+      "status": "success",
+      "vector_store_status": "ready"
+    }
+  },
+  {
+    "check": "retrieve via Docker",
+    "http_status": 200,
+    "payload": {
+      "caller": "student",
+      "k": 5,
+      "query": "students enrolled in ASD101",
+      "results": [
+        {
+          "authority_tier": "tier_1",
+          "chunk_id": "db_student_1",
+          "distance": 1.1055728197097778,
+          "query_coverage": 1.0,
+          "rank": 1,
+          "source_id": "enrolment.db",
+          "text": "Student record: student_id=1, student_name=John Smith, subject_code=ASD101."
+        },
+        {
+          "authority_tier": "tier_1",
+          "chunk_id": "db_student_2",
+          "distance": 1.1055728197097778,
+          "query_coverage": 1.0,
+          "rank": 2,
+          "source_id": "enrolment.db",
+          "text": "Student record: student_id=2, student_name=Sarah Jones, subject_code=ASD101."
+        }
+      ],
+      "retrieval_mode": "vector",
+      "status": "success"
+    }
+  },
+  {
+    "check": "subject answer",
+    "http_status": 200,
+    "payload": {
+      "answer": "Students found in retrieved evidence (not necessarily exhaustive): John Smith (ID 1, ASD101); Sarah Jones (ID 2, ASD101)",
+      "citations": [
+        {
+          "authority_tier": "tier_1",
+          "chunk_id": "db_student_1",
+          "source_id": "enrolment.db"
+        },
+        {
+          "authority_tier": "tier_1",
+          "chunk_id": "db_student_2",
+          "source_id": "enrolment.db"
+        }
+      ],
+      "confidence_category": "Medium",
+      "query": "Which students are enrolled in ASD101?",
+      "retrieval_summary": {
+        "k": 5,
+        "retrieved_count": 2,
+        "top_chunk": "db_student_1"
+      },
+      "status": "success"
+    }
+  },
+  {
+    "check": "aggregate answer",
+    "http_status": 200,
+    "payload": {
+      "answer": "Answer: There are 10 students. [db_student_count]",
+      "citations": [
+        {
+          "authority_tier": "tier_1",
+          "chunk_id": "db_student_count",
+          "source_id": "enrolment.db"
+        }
+      ],
+      "confidence_category": "Medium",
+      "query": "student count",
+      "retrieval_summary": {
+        "k": 1,
+        "retrieved_count": 1,
+        "top_chunk": "db_student_count"
+      },
+      "status": "success"
+    }
+  },
+  {
+    "check": "absent subject",
+    "http_status": 200,
+    "payload": {
+      "answer": "Insufficient evidence.",
+      "citations": [],
+      "confidence_category": "Unknown",
+      "query": "Which students are enrolled in XYZ999?",
+      "retrieval_summary": {
+        "k": 5,
+        "retrieved_count": 0,
+        "top_chunk": null
+      },
+      "status": "success"
+    }
+  },
+  {
+    "check": "disabled mode",
+    "http_status": 403,
+    "payload": {
+      "error": "RAG mode is disabled.",
+      "status": "error"
+    }
+  },
+  {
+    "check": "invalid k",
+    "http_status": 400,
+    "payload": {
+      "error": "k must be an integer between 1 and 20",
+      "status": "error"
+    }
+  },
+  {
+    "check": "blank query",
+    "http_status": 400,
+    "payload": {
+      "error": "query is required",
+      "status": "error"
+    }
+  },
+  {
+    "check": "invalid JSON type",
+    "http_status": 400,
+    "payload": {
+      "status": "error",
+      "error": "invalid_json: JSON body must be an object"
+    }
+  }
+]

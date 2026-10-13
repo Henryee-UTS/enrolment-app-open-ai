@@ -1,0 +1,57 @@
+[
+  {
+    "server": "mcp-server/server.py",
+    "tools": [
+      "student_count",
+      "students_by_subject",
+      "project_files",
+      "ci_report"
+    ],
+    "result": {
+      "meta": {
+        "io.modelcontextprotocol/serverInfo": {
+          "name": "Student Enrolment MCP",
+          "version": ""
+        }
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "{\n  \"student_count\": 10\n}",
+          "annotations": null,
+          "meta": null
+        }
+      ],
+      "structured_content": null,
+      "is_error": false,
+      "result_type": "complete"
+    }
+  },
+  {
+    "server": "rag-server/rag_server.py",
+    "tools": [
+      "refresh_corpus",
+      "retrieve_context",
+      "answer_question"
+    ],
+    "result": {
+      "meta": {
+        "io.modelcontextprotocol/serverInfo": {
+          "name": "Student Enrolment RAG MCP",
+          "version": ""
+        }
+      },
+      "content": [
+        {
+          "type": "text",
+          "text": "{\n  \"status\": \"success\",\n  \"query\": \"student count\",\n  \"caller\": \"student\",\n  \"k\": 1,\n  \"retrieval_mode\": \"vector\",\n  \"results\": [\n    {\n      \"rank\": 1,\n      \"chunk_id\": \"db_student_count\",\n      \"source_id\": \"enrolment.db\",\n      \"authority_tier\": \"tier_1\",\n      \"distance\": 0.3670068085193634,\n      \"text\": \"Student count is 10.\",\n      \"query_coverage\": 1.0\n    }\n  ]\n}",
+          "annotations": null,
+          "meta": null
+        }
+      ],
+      "structured_content": null,
+      "is_error": false,
+      "result_type": "complete"
+    }
+  }
+]

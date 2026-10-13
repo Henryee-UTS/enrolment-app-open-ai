@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "student-enrolment-rag": {
+      "command": ".venv-lab7/bin/python",
+      "args": ["rag-server/rag_server.py"]
+    }
+  }
+}

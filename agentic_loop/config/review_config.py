@@ -54,6 +54,11 @@ def build_mode_config() -> dict[str, ModeConfig]:
                 "review/devops_evidence_review_prompt.txt",
             ),
         ),
+        "rag": ModeConfig(
+            key="rag", label="RAG", prompt_family="lab8",
+            implementation_prompts=("implementation/rag_implementation_prompt.txt",),
+            review_prompts=("review/rag_review_prompt.txt", "review/rag_reasoning_prompt.txt"),
+        ),
         "mcp": ModeConfig(
             key="mcp",
             label="MCP",

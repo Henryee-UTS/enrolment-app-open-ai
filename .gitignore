@@ -6,3 +6,7 @@ vscode
 __pycache__/
 *.db.env
 .venv-lab7/
+
+rag-server/chroma/
+rag-server/corpus/
+rag-server/rag-audit.jsonl
