@@ -70,6 +70,13 @@ def build_mode_config() -> dict[str, ModeConfig]:
                 "review/integration_review_prompt.txt",
             ),
         ),
+        "multi_agent": ModeConfig(
+            key="multi_agent",
+            label="Multi-Agent",
+            prompt_family="lab10",
+            implementation_prompts=(),
+            review_prompts=(),
+        ),
     }
 
 

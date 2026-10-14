@@ -14,6 +14,7 @@ def print_menu() -> None:
     print("4 - DevOps")
     print("5 - MCP")
     print("6 - RAG")
+    print("7 - Multi-Agent")
     print("0 - Exit")
     print("=" * 70)
 

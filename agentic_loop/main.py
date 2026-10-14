@@ -24,6 +24,7 @@ def _menu_choice_to_key(choice: str) -> str | None:
         "4": "devops",
         "5": "mcp",
         "6": "rag",
+        "7": "multi_agent",
     }.get(choice)
 
 
@@ -61,7 +62,7 @@ def main() -> None:
         mode_key = _menu_choice_to_key(choice)
 
         if not mode_key:
-            print("Invalid choice. Select 0 through 6.")
+            print("Invalid choice. Select 0 through 7.")
             continue
 
         result = run_mode(

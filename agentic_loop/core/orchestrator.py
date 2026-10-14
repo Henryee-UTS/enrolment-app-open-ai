@@ -1,5 +1,8 @@
+import json
+import os
 from pathlib import Path
-
+from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
 from collectors import (
     architecture_collector,
     db_collector,
@@ -46,6 +49,42 @@ def run_mode(
 ) -> str:
 
     _stage(mode.label, "START", "Starting review flow")
+
+    # LAB 10 - MULTI-AGENT WORKFLOW
+    if mode.key == "multi_agent":
+        _stage(mode.label, "API", "Starting Multi-Agent workflow")
+
+        sample_request = "Generate a student enrolment summary for ASD101."
+        user_request = input(
+            f"Enter workflow request [{sample_request}]: "
+        ).strip() or sample_request
+
+        service_url = os.getenv(
+            "MULTI_AGENT_WORKFLOW_URL",
+            "http://127.0.0.1:5004/workflow",
+        )
+
+        request = Request(
+            service_url,
+            data=json.dumps({
+                "user_request": user_request
+            }).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+
+        try:
+            with urlopen(request, timeout=180) as response:
+                result = json.load(response)
+
+        except (HTTPError, URLError, TimeoutError, ValueError) as exc:
+            _stage(mode.label, "API", "Workflow request failed")
+            return f"MULTI-AGENT FAILED: {exc}"
+
+        _stage(mode.label, "DONE", "Workflow response received")
+        return json.dumps(result, indent=2)
+
+
     _stage(mode.label, "OBSERVE", "Collecting evidence")
 
     collector = COLLECTORS[mode.key]

@@ -25,6 +25,8 @@ services:
             MCP_ENABLED: "true"
             RAG_ENABLED: "true"
             RAG_SERVICE_URL: http://host.docker.internal:5003
+            MULTI_AGENT_SERVICE_URL: http://host.docker.internal:5004
+            MULTI_AGENT_ENABLED: "true"
         volumes:
             - ./reports:/app/reports:ro
         extra_hosts:

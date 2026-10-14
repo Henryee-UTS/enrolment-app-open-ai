@@ -10,3 +10,5 @@ __pycache__/
 rag-server/chroma/
 rag-server/corpus/
 rag-server/rag-audit.jsonl
+multi-agent-server/workflow_history.jsonl
+multi-agent-server/coordination_audit.jsonl

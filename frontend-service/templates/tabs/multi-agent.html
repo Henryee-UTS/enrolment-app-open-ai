@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Multi-Agent Tab</title>
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+
+<body>
+    <section class="card">
+        <h2>Multi-Agent Mode</h2>
+
+        <p>
+            Run planner, worker, and reviewer agents
+            in a coordinated workflow.
+        </p>
+
+        <div class="feature-toggle-row">
+            <label class="toggle-switch" for="multi-agent-toggle">
+                <input id="multi-agent-toggle" type="checkbox" checked>
+                <span class="toggle-label">
+                    Multi-Agent Enabled
+                </span>
+            </label>
+
+            <span id="multi-agent-state" class="feature-state feature-on">ON</span>
+        </div>
+
+        <form id="workflow-form" class="stack-form">
+            <label for="workflow-request">User Request</label>
+
+            <input id="workflow-request" name="user_request" list="workflow-request-samples" required
+                placeholder="Example: Generate a student enrolment summary for ASD101.">
+
+            <datalist id="workflow-request-samples">
+                <option value="Generate a student enrolment summary for ASD101."></option>
+                <option value="Build a study plan for cloud fundamentals with 3 milestones and expected outcomes.">
+                </option>
+                <option value="Recommend a learning pathway for AI DevOps based on ASD101 prerequisites."></option>
+            </datalist>
+
+            <div class="feature-actions">
+                <button type="button" class="rag-action"
+                    data-sample-request="Generate a student enrolment summary for ASD101.">
+                    Use Sample 1
+                </button>
+
+                <button type="button" class="rag-action"
+                    data-sample-request="Build a study plan for cloud fundamentals with 3 milestones and expected outcomes.">
+                    Use Sample 2
+                </button>
+
+                <button type="button" class="rag-action"
+                    data-sample-request="Recommend a learning pathway for AI DevOps based on ASD101 prerequisites.">
+                    Use Sample 3
+                </button>
+            </div>
+
+            <p class="rag-helper">
+                Hint: use a full task request for
+                planner-worker-reviewer flow.
+            </p>
+
+            <button type="submit" class="rag-action">
+                Run Workflow
+            </button>
+        </form>
+
+        <form id="status-form" class="stack-form">
+            <button type="submit" class="rag-action">
+                Get Workflow Status
+            </button>
+        </form>
+
+        <div id="multi-agent-results" class="panel panel-mcp">
+            Multi-agent responses will appear here.
+        </div>
+    </section>
+
+    <script>
+        // The Enrolment Service is the backend API.
+        const apiBase = "http://localhost:5001";
+
+        const output = document.getElementById("multi-agent-results");
+        const modeToggle = document.getElementById("multi-agent-toggle");
+        const modeState = document.getElementById("multi-agent-state");
+        const requestInput = document.getElementById("workflow-request");
+
+        const STORAGE_KEY = "multi_agent_mode_enabled";
+
+        // Check whether Multi-Agent mode is enabled.
+        function isEnabled() {
+            return modeToggle.checked;
+        }
+
+        // Update the ON/OFF label.
+        function renderState() {
+            const enabled = isEnabled();
+
+            modeState.textContent = enabled ? "ON" : "OFF";
+            modeState.classList.toggle("feature-on", enabled);
+            modeState.classList.toggle("feature-off", !enabled);
+        }
+
+        // Display the API response.
+        function renderJson(title, data) {
+            output.replaceChildren();
+
+            const heading = document.createElement("h3");
+            heading.textContent = title;
+
+            const content = document.createElement("pre");
+            content.textContent = JSON.stringify(data, null, 2);
+
+            output.append(heading, content);
+        }
+
+        // Display connection or request errors.
+        function renderError(error) {
+            output.textContent = "API Error: " + error.message;
+        }
+
+        // Send a request to the backend API.
+        async function apiRequest(path, method = "GET", data = null) {
+            const options = {
+                method: method,
+                headers: {
+                    "X-Multi-Agent-Mode": isEnabled() ? "on" : "off"
+                }
+            };
+
+            if (data !== null) {
+                options.headers["Content-Type"] = "application/json";
+                options.body = JSON.stringify(data);
+            }
+
+            const response = await fetch(apiBase + path, options);
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    result.error || "HTTP " + response.status
+                );
+            }
+
+            return result;
+        }
+
+        // Save and restore the Multi-Agent toggle.
+        const savedMode = localStorage.getItem(STORAGE_KEY);
+
+        if (savedMode !== null) {
+            modeToggle.checked = savedMode === "true";
+        }
+
+        renderState();
+
+        modeToggle.addEventListener("change", () => {
+            localStorage.setItem(STORAGE_KEY, String(isEnabled()));
+            renderState();
+
+            if (!isEnabled()) {
+                output.textContent = "Multi-Agent Mode is OFF.";
+            }
+        });
+
+        // Populate the input field using sample buttons.
+        document.querySelectorAll("[data-sample-request]").forEach(
+            (button) => {
+                button.addEventListener("click", () => {
+                    requestInput.value = button.dataset.sampleRequest;
+                });
+            }
+        );
+
+        // Run a new workflow.
+        document.getElementById("workflow-form").addEventListener(
+            "submit",
+            async (event) => {
+                event.preventDefault();
+
+                if (!isEnabled()) {
+                    output.textContent = "Enable Multi-Agent Mode first.";
+                    return;
+                }
+
+                output.textContent = "Running workflow. Please wait...";
+
+                try {
+                    const result = await apiRequest(
+                        "/multi-agent/workflow",
+                        "POST",
+                        { user_request: requestInput.value.trim() }
+                    );
+
+                    renderJson("Multi-Agent Workflow Result", result);
+
+                } catch (error) {
+                    renderError(error);
+                }
+            }
+        );
+
+        // Retrieve existing workflow history.
+        document.getElementById("status-form").addEventListener(
+            "submit",
+            async (event) => {
+                event.preventDefault();
+
+                if (!isEnabled()) {
+                    output.textContent = "Enable Multi-Agent Mode first.";
+                    return;
+                }
+
+                output.textContent = "Loading workflow status...";
+
+                try {
+                    const result = await apiRequest(
+                        "/multi-agent/workflow/status"
+                    );
+
+                    renderJson("Workflow Status", result);
+
+                } catch (error) {
+                    renderError(error);
+                }
+            }
+        );
+    </script>
+
+</body>
+
+</html>
