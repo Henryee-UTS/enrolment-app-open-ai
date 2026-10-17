@@ -56,5 +56,10 @@ def get_students_by_subject():
 
     return jsonify([dict(row) for row in students])
 
+
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5002, debug=True)
+    app.run(
+        host="0.0.0.0",  # noqa: S104 - Docker requires binding all interfaces
+        port=5002,
+        debug=False,
+    )

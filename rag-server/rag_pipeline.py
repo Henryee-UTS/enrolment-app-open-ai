@@ -97,8 +97,8 @@ def reset_collection() -> None:
     client = chromadb.PersistentClient(path=str(CHROMA_PATH))
     try:
         client.delete_collection(name=COLLECTION_NAME)
-    except Exception:
-        pass
+    except chromadb.errors.NotFoundError:
+        print(f"Collection '{COLLECTION_NAME}' does not exist. Creating it.")
     _collection = client.get_or_create_collection(name=COLLECTION_NAME)
 
 

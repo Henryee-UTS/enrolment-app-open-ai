@@ -20,6 +20,7 @@ services:
             - "5001:5001"
         environment:
             DATABASE_SERVICE_URL: http://database-service:5002
+            JWT_SECRET_KEY: "${JWT_SECRET_KEY:?JWT_SECRET_KEY must be configured}"
             OLLAMA_BASE_URL: http://host.docker.internal:11434/v1
             OLLAMA_MODEL: qwen2.5:0.5b
             MCP_ENABLED: "true"

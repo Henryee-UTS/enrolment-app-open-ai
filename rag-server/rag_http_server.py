@@ -80,7 +80,8 @@ class RAGHandler(BaseHTTPRequestHandler):
 
 
 def main():
-    host = "0.0.0.0"
+    
+    host = "0.0.0.0"  # noqa: S104 - Required for Docker container networking
     port = int(os.getenv("PORT", "5003"))
     server = HTTPServer((host, port), RAGHandler)
     print(f"RAG HTTP server running on {host}:{port}")

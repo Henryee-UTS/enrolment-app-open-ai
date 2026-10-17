@@ -1,6 +1,7 @@
 import json
 import os
 from pathlib import Path
+from urllib.parse import urlsplit
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 from collectors import (
@@ -59,13 +60,19 @@ def run_mode(
             f"Enter workflow request [{sample_request}]: "
         ).strip() or sample_request
 
+        
         service_url = os.getenv(
             "MULTI_AGENT_WORKFLOW_URL",
             "http://127.0.0.1:5004/workflow",
         )
 
-        request = Request(
-            service_url,
+        parsed_url = urlsplit(service_url)
+
+        if parsed_url.scheme not in ("http", "https") or not parsed_url.hostname:
+            return "MULTI-AGENT FAILED: Only valid HTTP/HTTPS URLs are allowed."
+
+        request = Request( # noqa: S310 - HTTP/HTTPS scheme validated above
+            service_url,  
             data=json.dumps({
                 "user_request": user_request
             }).encode("utf-8"),
@@ -74,7 +81,7 @@ def run_mode(
         )
 
         try:
-            with urlopen(request, timeout=180) as response:
+            with urlopen(request, timeout=180) as response:  # noqa: S310 - URL scheme validated
                 result = json.load(response)
 
         except (HTTPError, URLError, TimeoutError, ValueError) as exc:

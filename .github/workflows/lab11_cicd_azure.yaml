@@ -1,0 +1,55 @@
+
+name: Lab 11 CI/CD
+
+on:
+  push:
+    branches:
+      - lab11-testing-deployment
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  lab11-tests:
+    name: Lab 11 Automated Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r enrolment-service/requirements.txt pytest
+
+      - name: Generate temporary JWT secret
+        run: echo "JWT_SECRET_KEY=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
+
+      - name: Build and start Docker services
+        run: docker compose up -d --build
+
+      - name: Wait for Enrolment API
+        run: |
+          for i in $(seq 1 30); do
+            if curl --fail --silent http://localhost:5001/ > /dev/null; then
+              echo "Enrolment API is ready"
+              exit 0
+            fi
+            sleep 2
+          done
+          docker compose logs --tail=50 enrolment-service
+          exit 1
+
+      - name: Run post-commit tests
+        run: python -m pytest tests/lab11/post_commit/ -v
+
+      - name: Stop Docker services
+        if: always()
+        run: docker compose down

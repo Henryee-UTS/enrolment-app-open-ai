@@ -61,11 +61,12 @@ def status():
     return jsonify(workflow_status()), 200
 
 
+
 if __name__ == "__main__":
-    # Start the local development server.
-    # 0.0.0.0 allows connections through available network interfaces.
+    debug_mode = os.getenv("FLASK_DEBUG", "false").lower() == "true"
+
     app.run(
-        host="0.0.0.0",
+        host="0.0.0.0",  # noqa: S104 - Docker access requires binding all interfaces
         port=int(os.getenv("PORT", "5004")),
-        debug=True,
+        debug=debug_mode,
     )

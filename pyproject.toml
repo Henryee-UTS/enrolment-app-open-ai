@@ -1,0 +1,16 @@
+
+[tool.ruff]
+# Lab 11: Exclude old Lab 3 code
+exclude = ["legacy-lab3"]
+
+[tool.ruff.lint]
+# Run security-related checks only
+select = ["S"]
+
+
+[tool.ruff.lint.per-file-ignores]
+# pytest uses assert statements for testing
+"tests/**" = ["S101"]
+
+# Lab 8 functional verification script uses assert for expected results
+"scripts/check_lab8_http.py" = ["S101"]

@@ -14,7 +14,7 @@ from routes.normal_ui import normal_ui_bp
 from routes.mcp_mode import mcp_bp
 from routes.rag_mode import rag_bp
 from routes.multi_agent_mode import multi_agent_bp
-
+from routes.auth import auth_bp
 
 def create_app():
     app = Flask(__name__)
@@ -25,6 +25,7 @@ def create_app():
     app.register_blueprint(mcp_bp)
     app.register_blueprint(rag_bp)
     app.register_blueprint(multi_agent_bp)
+    app.register_blueprint(auth_bp)
 
     return app
 
@@ -32,5 +33,10 @@ def create_app():
 app = create_app()
 
 
+
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5001, debug=True)
+    app.run(
+        host="0.0.0.0",  # noqa: S104 - Required for Docker container networking
+        port=5001,
+        debug=False,
+    )
