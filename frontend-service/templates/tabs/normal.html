@@ -68,7 +68,7 @@ toggleStudentsBtn.addEventListener("click", () => {
         toggleStudentsBtn.textContent = "Hide All Students";
 
         if (!studentsPanel.dataset.loaded) {
-            renderIntoPanel("students-result", "http://localhost:5001/students");
+            renderIntoPanel("students-result", "/students");
             studentsPanel.dataset.loaded = "true";
         }
     } else {
@@ -81,14 +81,14 @@ studentByIdForm.addEventListener("submit", (event) => {
     event.preventDefault();
     const formData = new FormData(studentByIdForm);
     const query = new URLSearchParams(formData).toString();
-    renderIntoPanel("student-result", `http://localhost:5001/students/by-id?${query}`);
+    renderIntoPanel("student-result", `/students/by-id?${query}`);
 });
 
 studentsBySubjectForm.addEventListener("submit", (event) => {
     event.preventDefault();
     const formData = new FormData(studentsBySubjectForm);
     const query = new URLSearchParams(formData).toString();
-    renderIntoPanel("subject-result", `http://localhost:5001/students/by-subject?${query}`);
+    renderIntoPanel("subject-result", `/students/by-subject?${query}`);
 });
 </script>
 </body>

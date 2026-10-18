@@ -64,7 +64,7 @@ async function renderIntoPanel(panelId, url, options = {}) {
 askForm.addEventListener("submit", (event) => {
     event.preventDefault();
     const formData = new URLSearchParams(new FormData(askForm));
-    renderIntoPanel("agent-result", "http://localhost:5001/ask", {
+    renderIntoPanel("agent-result", "/ask", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: formData,
@@ -74,7 +74,7 @@ askForm.addEventListener("submit", (event) => {
 askWithContextForm.addEventListener("submit", (event) => {
     event.preventDefault();
     const formData = new URLSearchParams(new FormData(askWithContextForm));
-    renderIntoPanel("context-result", "http://localhost:5001/ask-with-context", {
+    renderIntoPanel("context-result", "/ask-with-context", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: formData,
@@ -84,7 +84,7 @@ askWithContextForm.addEventListener("submit", (event) => {
 architectureReviewForm.addEventListener("submit", (event) => {
     event.preventDefault();
     const formData = new URLSearchParams(new FormData(architectureReviewForm));
-    renderIntoPanel("architecture-result", "http://localhost:5001/architecture-review", {
+    renderIntoPanel("architecture-result", "/architecture-review", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: formData,
