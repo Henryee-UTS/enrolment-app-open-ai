@@ -57,11 +57,8 @@ jobs:
           docker compose logs --tail=50 enrolment-service
           exit 1
 
-      - name: Run post-commit tests
-        run: |
-          mkdir -p reports/lab11
-          set -o pipefail
-          python -m pytest tests/lab11/post_commit/ -v 2>&1 | tee reports/lab11/post_commit.log
+      - name: Run post-commit tests and generate evidence
+        run: python scripts/lab11/post_commit_evidence.py
 
       - name: Stop Docker services
         if: always()
@@ -72,7 +69,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: lab11-test-evidence
-          path: reports/lab11/post_commit.log
+          path: |
+            reports/lab11/post_commit.log
+            reports/lab11/test-results.md
+            reports/lab11/test-audit.jsonl
           if-no-files-found: warn
 
   deploy_azure:

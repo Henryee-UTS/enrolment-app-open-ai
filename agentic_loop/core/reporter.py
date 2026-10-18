@@ -15,6 +15,9 @@ def print_menu() -> None:
     print("5 - MCP")
     print("6 - RAG")
     print("7 - Multi-Agent")
+    print("8 - Pre-Test Review")
+    print("9 - CI/CD Test Review")
+    print("10 - Deployment Review")
     print("0 - Exit")
     print("=" * 70)
 
