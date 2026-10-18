@@ -40,7 +40,11 @@ jobs:
           python -m pre_commit run --all-files
 
       - name: Generate temporary JWT secret
-        run: echo "JWT_SECRET_KEY=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
+        run: |
+          JWT_SECRET_KEY=$(openssl rand -hex 32)
+          echo "::add-mask::$JWT_SECRET_KEY"
+          echo "JWT_SECRET_KEY=$JWT_SECRET_KEY" >> "$GITHUB_ENV"
+          unset JWT_SECRET_KEY
 
       - name: Build and start Docker services
         run: docker compose up -d --build
