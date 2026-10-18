@@ -7,8 +7,12 @@ LOCATION="${LOCATION:-australiaeast}"
 
 echo "=== Lab 11 Environment Setup ==="
 
-az provider register --namespace Microsoft.App --wait
-az provider register --namespace Microsoft.OperationalInsights --wait
+if [[ "${GITHUB_ACTIONS:-}" == "true" ]]; then
+  echo "GitHub Actions: skipping subscription-level provider registration."
+else
+  az provider register --namespace Microsoft.App --wait
+  az provider register --namespace Microsoft.OperationalInsights --wait
+fi
 
 EXISTING_REGISTRY=$(az group show --name "$RESOURCE_GROUP" \
   --query "tags.registryName" -o tsv 2>/dev/null || true)
