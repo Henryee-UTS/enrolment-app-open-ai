@@ -44,23 +44,19 @@ for i in $(seq 1 24); do
   sleep 5
 done
 
+echo "Logging in to Azure Container Registry..."
+az acr login --name "$REGISTRY_NAME"
+
 echo "Building database-service..."
-az acr build \
-  --registry "$REGISTRY_NAME" \
-  --image "database-service:${IMAGE_TAG}" \
-  ./database-service
+docker build -t "${LOGIN_SERVER}/database-service:${IMAGE_TAG}" ./database-service
+docker push "${LOGIN_SERVER}/database-service:${IMAGE_TAG}"
 
 echo "Building enrolment-service..."
-az acr build \
-  --registry "$REGISTRY_NAME" \
-  --image "enrolment-service:${IMAGE_TAG}" \
-  --file enrolment-service/Dockerfile \
-  .
+docker build -f enrolment-service/Dockerfile -t "${LOGIN_SERVER}/enrolment-service:${IMAGE_TAG}" .
+docker push "${LOGIN_SERVER}/enrolment-service:${IMAGE_TAG}"
 
 echo "Building frontend-service..."
-az acr build \
-  --registry "$REGISTRY_NAME" \
-  --image "frontend-service:${IMAGE_TAG}" \
-  ./frontend-service
+docker build -t "${LOGIN_SERVER}/frontend-service:${IMAGE_TAG}" ./frontend-service
+docker push "${LOGIN_SERVER}/frontend-service:${IMAGE_TAG}"
 
 echo "=== Image Build Complete ==="
